@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Assessment
-import androidx.compose.material.icons.rounded.Badge
 import androidx.compose.material.icons.rounded.BeachAccess
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -60,10 +61,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.R
 import com.example.data.model.LeaveStatus
 import com.example.domain.DateUtils
 import com.example.ui.components.KpiCard
@@ -105,7 +108,7 @@ fun DashboardScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Royal Blue Gradient HRM Top Header
+        // Royal Blue Gradient HRM Top Header with Admin Panel Logo
         item {
             Surface(
                 shape = RoundedCornerShape(24.dp),
@@ -123,7 +126,7 @@ fun DashboardScreen(
                         )
                         .padding(18.dp)
                 ) {
-                    // Top bar row: Logo + Name, Notifications, Profile Avatar
+                    // Top bar row: Logo + Name, Notifications, Admin Panel Logo Avatar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,28 +144,23 @@ fun DashboardScreen(
                                     contentDescription = "StaffTrack company logo",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(44.dp)
                                         .clip(RoundedCornerShape(12.dp))
                                 )
                             } else {
-                                Box(
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_admin_panel),
+                                    contentDescription = "StaffTrack Admin Panel logo",
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(Color.White.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Badge,
-                                        contentDescription = "StaffTrack logo",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, Color.White.copy(alpha = 0.7f), CircleShape)
+                                )
                             }
                             Column {
                                 Text(
-                                    text = "StaffTrack",
+                                    text = "StaffTrack • Admin Panel",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -205,19 +203,20 @@ fun DashboardScreen(
                             Surface(
                                 onClick = onSwitchAccount,
                                 shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.22f),
+                                color = Color.White,
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(42.dp)
                                     .testTag("switch_account_avatar")
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = "HR",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                }
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_admin_panel),
+                                    contentDescription = "Admin panel profile",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, Color.White, CircleShape)
+                                )
                             }
                         }
                     }

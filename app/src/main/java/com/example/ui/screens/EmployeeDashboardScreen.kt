@@ -1,6 +1,11 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,16 +49,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.local.entity.EmployeeEntity
 import com.example.data.model.AttendanceStatus
 import com.example.data.model.LeaveCategory
@@ -75,6 +85,7 @@ import com.example.ui.theme.LeavePurple
 import com.example.ui.theme.PresentGreen
 import com.example.ui.theme.RoyalBlueDark
 import com.example.ui.theme.RoyalBluePrimary
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,6 +102,14 @@ fun EmployeeDashboardScreen(
     modifier: Modifier = Modifier
 ) {
     var showApplyLeave by remember { mutableStateOf(false) }
+    var hazriConfirmMsg by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(hazriConfirmMsg) {
+        if (hazriConfirmMsg != null) {
+            delay(3500)
+            hazriConfirmMsg = null
+        }
+    }
 
     val todayRecord = remember(uiState.attendance, employee.id, uiState.todayDate) {
         uiState.attendance.firstOrNull { it.employeeId == employee.id && it.date == uiState.todayDate }
@@ -176,7 +195,7 @@ fun EmployeeDashboardScreen(
             }
         }
 
-        // Today Check-In / Check-Out Action Card
+        // Today Check-In / Check-Out (Hazri) Action Card
         item {
             SaasCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -185,11 +204,76 @@ fun EmployeeDashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Today's Shift", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                color = Color.White,
+                                shape = RoundedCornerShape(14.dp),
+                                shadowElevation = 1.dp,
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_staff_hazri),
+                                    contentDescription = "Staff Hazri attendance logo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(14.dp))
+                                )
+                            }
+                            Column {
+                                Text("Today's Shift (Hazri)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = "Staff attendance check-in & out",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                         if (todayRecord != null) {
                             AttendanceBadge(todayRecord.status, uiState.settings.themeMode)
                         }
                     }
+
+                    AnimatedVisibility(
+                        visible = hazriConfirmMsg != null,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Surface(
+                            color = PresentGreen.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_staff_hazri),
+                                    contentDescription = "Hazri marked confirmation",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White)
+                                )
+                                Text(
+                                    text = hazriConfirmMsg.orEmpty(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PresentGreen
+                                )
+                            }
+                        }
+                    }
+
                     val worked = DateUtils.calculateWorkingHours(todayRecord?.checkInTime, todayRecord?.checkOutTime)
                     Text(
                         text = if (todayRecord == null) {
@@ -213,6 +297,7 @@ fun EmployeeDashboardScreen(
                                     todayRecord?.overtimeHours,
                                     "Self Check-In"
                                 )
+                                hazriConfirmMsg = "Hazri Recorded! Checked in at $nowHHmm"
                             },
                             enabled = todayRecord?.checkInTime == null,
                             colors = ButtonDefaults.buttonColors(containerColor = PresentGreen, contentColor = Color.White),
@@ -233,6 +318,7 @@ fun EmployeeDashboardScreen(
                                     null,
                                     "Self Check-Out"
                                 )
+                                hazriConfirmMsg = "Shift Complete! Checked out at $nowHHmm"
                             },
                             enabled = todayRecord?.checkInTime != null && todayRecord.checkOutTime == null,
                             modifier = Modifier.weight(1f)

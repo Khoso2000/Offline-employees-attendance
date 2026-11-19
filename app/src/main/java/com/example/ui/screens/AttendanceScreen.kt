@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +55,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,12 +65,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.EmployeeEntity
 import com.example.data.model.AttendanceStatus
@@ -80,6 +88,7 @@ import com.example.ui.theme.AbsentRed
 import com.example.ui.theme.LateAmber
 import com.example.ui.theme.LeaveBlue
 import com.example.ui.theme.PresentGreen
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +104,27 @@ fun AttendanceScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showBulkDialog by remember { mutableStateOf(false) }
     var editingPair by remember { mutableStateOf<Pair<EmployeeEntity, AttendanceEntity?>?>(null) }
+    var hazriBanner by remember { mutableStateOf<Pair<String, AttendanceStatus>?>(null) }
+
+    LaunchedEffect(hazriBanner) {
+        if (hazriBanner != null) {
+            delay(3500)
+            hazriBanner = null
+        }
+    }
+
+    fun markWithHazriBanner(
+        emp: EmployeeEntity,
+        date: String,
+        status: AttendanceStatus,
+        checkIn: String?,
+        checkOut: String?,
+        otHours: Double?,
+        notes: String
+    ) {
+        onMarkAttendance(emp, date, status, checkIn, checkOut, otHours, notes)
+        hazriBanner = emp.fullName to status
+    }
 
     val activeEmployees = remember(uiState.employees, searchQuery) {
         uiState.employees.filter { emp ->
@@ -129,6 +159,100 @@ fun AttendanceScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // Staff Attendance (Hazri) Visual Banner
+                    item {
+                        SaasCard(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    color = Color.White,
+                                    shape = RoundedCornerShape(14.dp),
+                                    shadowElevation = 1.dp,
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.logo_staff_hazri),
+                                        contentDescription = "Staff Hazri attendance logo",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(14.dp))
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Staff Attendance (Hazri)",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${dateAttendanceMap.size} of ${activeEmployees.size} staff marked for ${DateUtils.formatDisplayDate(selectedDate, uiState.settings.dateFormat)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Celebratory Hazri Confirmation Banner when marking attendance
+                    item {
+                        AnimatedVisibility(
+                            visible = hazriBanner != null,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            hazriBanner?.let { (staffName, markedStatus) ->
+                                val (fg, bg) = attendanceStatusColors(markedStatus, uiState.settings.themeMode)
+                                Surface(
+                                    color = bg,
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(1.dp, fg.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo_staff_hazri),
+                                            contentDescription = "Hazri marked staff illustration",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(Color.White)
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Hazri Marked!",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = fg
+                                            )
+                                            Text(
+                                                text = "$staffName • ${markedStatus.label}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                        AttendanceBadge(markedStatus, uiState.settings.themeMode)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Date Switcher & Bulk Button
                     item {
                         SaasCard(modifier = Modifier.fillMaxWidth()) {
@@ -250,7 +374,7 @@ fun AttendanceScreen(
                                                                 AttendanceStatus.HALF_DAY -> "13:00"
                                                                 else -> null
                                                             }
-                                                            onMarkAttendance(quickEmp, selectedDate, st, defIn, defOut, quickRec?.overtimeHours, quickRec?.notes ?: "")
+                                                            markWithHazriBanner(quickEmp, selectedDate, st, defIn, defOut, quickRec?.overtimeHours, quickRec?.notes ?: "")
                                                         }
                                                     },
                                                     shape = RoundedCornerShape(14.dp),
@@ -289,7 +413,7 @@ fun AttendanceScreen(
                                             AttendanceStatus.HALF_DAY -> existing?.checkOutTime ?: "13:00"
                                             else -> null
                                         }
-                                        onMarkAttendance(empToUpdate, selectedDate, newStatus, defIn, defOut, existing?.overtimeHours, existing?.notes ?: "")
+                                        markWithHazriBanner(empToUpdate, selectedDate, newStatus, defIn, defOut, existing?.overtimeHours, existing?.notes ?: "")
                                         confirmOverwrite = null
                                     },
                                     onDismiss = { confirmOverwrite = null }
@@ -417,7 +541,7 @@ fun AttendanceScreen(
                                                     AttendanceStatus.HALF_DAY -> record?.checkOutTime ?: "13:00"
                                                     else -> null
                                                 }
-                                                onMarkAttendance(
+                                                markWithHazriBanner(
                                                     emp,
                                                     selectedDate,
                                                     st,
@@ -480,6 +604,7 @@ fun AttendanceScreen(
             activeCount = activeEmployees.size,
             onApply = { status, overwrite ->
                 onBulkMarkAttendance(uiState.employees, selectedDate, status, overwrite)
+                hazriBanner = "All Active Staff (${activeEmployees.size})" to status
                 showBulkDialog = false
             },
             onDismiss = { showBulkDialog = false }
@@ -494,7 +619,7 @@ fun AttendanceScreen(
             defaultStart = uiState.settings.officeStartTime,
             defaultEnd = uiState.settings.officeEndTime,
             onSave = { status, checkIn, checkOut, otHours, notes ->
-                onMarkAttendance(emp, existing?.date ?: selectedDate, status, checkIn, checkOut, otHours, notes)
+                markWithHazriBanner(emp, existing?.date ?: selectedDate, status, checkIn, checkOut, otHours, notes)
                 editingPair = null
             },
             onDismiss = { editingPair = null }

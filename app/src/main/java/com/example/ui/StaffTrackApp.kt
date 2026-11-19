@@ -1,9 +1,12 @@
 package com.example.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,9 +16,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
@@ -71,12 +76,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,6 +97,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.R
 import com.example.data.model.ThemeMode
 import com.example.data.model.UserRole
 import com.example.ui.components.OnlineSavedPills
@@ -104,6 +115,8 @@ import com.example.ui.screens.ReportsScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.state.StaffTrackUiState
 import com.example.ui.state.StaffTrackViewModel
+import com.example.ui.theme.RoyalBlueDark
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class NavDestination(
@@ -133,6 +146,12 @@ fun StaffTrackApp(
     uiState: StaffTrackUiState
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLaunchSplash by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(1300)
+        showLaunchSplash = false
+    }
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect { msg ->
@@ -140,14 +159,51 @@ fun StaffTrackApp(
         }
     }
 
-    if (uiState.isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    if (showLaunchSplash || uiState.isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF045568), RoyalBlueDark)
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.padding(24.dp)
             ) {
-                CircularProgressIndicator()
-                Text("Loading offline workspace...", style = MaterialTheme.typography.bodyMedium)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_app_launch),
+                    contentDescription = "StaffTrack launch logo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(132.dp)
+                        .clip(RoundedCornerShape(30.dp))
+                        .border(2.5.dp, Color.White.copy(alpha = 0.75f), RoundedCornerShape(30.dp))
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "StaffTrack",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "Employee Attendance & Payroll",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White.copy(alpha = 0.88f)
+                )
+                if (uiState.isLoading) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 2.5.dp
+                    )
+                }
             }
         }
         return
@@ -275,20 +331,15 @@ fun StaffTrackApp(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
                 ) {
-                    Box(
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_admin_panel),
+                        contentDescription = "Admin Panel logo",
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "ST",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape)
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
@@ -297,7 +348,7 @@ fun StaffTrackApp(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "HRM & Payroll",
+                            text = "Admin Panel • HRM & Payroll",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,11 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AdminPanelSettings
-import androidx.compose.material.icons.rounded.Badge
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
@@ -45,10 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.local.entity.EmployeeEntity
 import com.example.data.model.EmploymentStatus
 import com.example.data.model.UserRole
@@ -99,22 +104,17 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // Brand Header
+            // Brand Header with App Launch Logo
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
+                Image(
+                    painter = painterResource(id = R.drawable.logo_app_launch),
+                    contentDescription = "StaffTrack app logo",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Badge,
-                        contentDescription = "StaffTrack logo",
-                        tint = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
+                        .size(76.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .border(2.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(22.dp))
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "StaffTrack",
@@ -176,6 +176,39 @@ fun LoginScreen(
                     }
 
                     if (selectedRole == UserRole.ADMIN) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_admin_panel),
+                                    contentDescription = "Admin panel logo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                )
+                                Column {
+                                    Text(
+                                        text = "Admin Control Panel",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Text(
+                                        text = "Manage staff, attendance, leaves & payroll",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                         OutlinedTextField(
                             value = adminEmail,
                             onValueChange = { adminEmail = it; errorMsg = null },
